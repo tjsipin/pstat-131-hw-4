@@ -1,0 +1,50 @@
+---
+title: "PSTAT HW 4"
+author: "TJ Sipin"
+date: "3/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ROCR)
+library(ggridges)
+library(dendextend)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+
+
+leukemia_data <- read_csv("leukemia_data.csv")
+```
+
+## Clustering and dimension reduction for gene expression data
+
+(a)
+
+```{r}
+# Converting Type to factor
+leukemia_data <- leukemia_data %>%
+  mutate(Type = as.factor(Type))
+
+# Table of number of patients with each leukemia subtype
+leukemiaSubtype <- table(leukemia_data[ , "Type"])
+leukemiaSubtype
+
+# Subtype with lowest number of occurrences
+names(which.min(leukemiaSubtype))
+```
+(b)
+
+```{r}
+
+```
+
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
