@@ -109,3 +109,14 @@ head(sort(abs(pr.out$rotation[,1]), decreasing = T), 6)
 
 The above show the six genes with the highest loading in PC1.
 
+(d) PCA orders the principal components according to the amount of total variation in the data that they explain. This does not mean, however, that the principal components are sorted in terms of how useful they are at capturing variation between the leukemia groups. For example, if gene expression varied significantly with age and gender (independent of leukemia status), the first principal components could reflect genetic variation due to age and gender, but not to leukemia. (4 pts) See if the 3rd PC is better at discriminating between leukemia types by plotting the data projected onto the first and third principal components (not the second).
+
+```{r}
+plot(x = pr.out$x[, c(1, 3)][,1], 
+     y = pr.out$x[, c(1,3)][,2],
+     col = plot_colors)+
+  text(pr.out$x[, c(1,3)], labels = leukemia_data$Type, cex = 0.3)
+```
+
+There seems to be much better separation (discrimination) between leukemia types as the variance is high but the spread of the means are low.
+
