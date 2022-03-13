@@ -2,14 +2,18 @@
 title: "PSTAT HW 4"
 author: "TJ Sipin"
 date: "3/13/2022"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, cache = T, message = F)
 library(tidyverse)
 library(ROCR)
 library(ggridges)
 library(dendextend)
+library(tidymodels)
 
 
 knitr::opts_chunk$set(echo = TRUE)
@@ -20,7 +24,7 @@ leukemia_data <- read_csv("leukemia_data.csv")
 
 ## Clustering and dimension reduction for gene expression data
 
-(a)
+(a) The class of the first column of leukemia_data, Type, is set to character by default. (1 pts) Convert the Type column to a factor using the mutate function. (2 pts) Use the table command to print the number of patients with each leukemia subtype. (1 pts) Which leukemia subtype occurs the least in this data?
 
 ```{r}
 # Converting Type to factor
@@ -32,19 +36,76 @@ leukemiaSubtype <- table(leukemia_data[ , "Type"])
 leukemiaSubtype
 
 # Subtype with lowest number of occurrences
-names(which.min(leukemiaSubtype))
+print(paste("Subtype with lowest number of occurrences: ",names(which.min(leukemiaSubtype))))
 ```
-(b)
+(b) (2 pts) Run PCA on the leukemia data using prcomp function with scale=TRUE and center=TRUE (this scales each gene to have mean 0 and variance 1). Make sure you exclude the Type column when you run the PCA function (we are only interested in the unsupervised learning regime for now, where our focus is on reducing the dimension of the gene expression values). (2 pts) Plot the proportion of variance explained by each principal component (PVE) and the cumulative PVE.
+(2 pts) How many PCs do we need in order to explain 90% of the total variation in the data?)
+```{r}
+# Recipe
+recipe <- recipe(Type ~ ., data = leukemia_data)
+```
+
+```{r, results="hide", warning=FALSE, message=FALSE}
+# Perform PCA on leukemia_data
+pr.out = prcomp(leukemia_data[2:ncol(leukemia_data)], scale = T, center = T)
+
+# Plotting proportion of variance explained by each PC (PVE) and the cumulative PVE
+
+pca_trans <- recipe %>%
+  step_center(all_numeric()) %>%
+  step_scale(all_numeric()) %>%
+  step_pca(all_numeric())
+
+pca_estimates <- prep(pca_trans)
+
+sdev <- pca_estimates$steps[[3]]$res$sdev
+
+percent_variation <- sdev^2 / sum(sdev^2)
+
+var_df <- data.frame(PC=paste0("PC", 1:length(sdev)),
+                     var_explained=percent_variation,
+                     stringsAsFactors = F)
+
+var_df %>%
+  mutate(PC = fct_inorder(PC)) %>%
+  ggplot(aes(x=PC, y=var_explained)) +
+  geom_col()
+
+plot(cumsum(percent_variation), xlab = "Principal Component",
+     ylab = "Proportion of Variation Explained",
+     ylim = c(0,1), type = 'b') %>%
+  abline(h=.9, col = 2) %>%
+  grid(col = "lightgray", lty = "dotted")
+```
+
+
+
+
+It appears that 200 PCs are needed to explain 90% of the total variation in the data.
+
+
+(c) (2 pts) Use the results of PCA to project the data into the first two principal component dimensions, i.e., compute the scores vectors for the first two PCs. Recall in Lab 9, prcomp returns this dimension reduced data in the columns of x. Plot the data as a scatter plot using plot function with col=plot_colors. (2 pts) Add the leukemia type labels to the plot using text with labels argument set to the leukemia type and the col to plot_colors (it may help legibility to make the points on the plot very small by setting cex to a small number). (2 pts) Which group is most clearly separated from the others along the PC2 axis? (2 pts) Which genes have the highest absolute loadings for PC1 (the genes that have the largest (absolute) weights in the weighted average used to create the new variable PC1)? You can find these by taking the absolute values of the first principal component loadings and sorting them. Print the first 6 genes in this sorted vector using the head function.
 
 ```{r}
+rainbow_colors <- rainbow(7)
+plot_colors = rainbow_colors[(leukemia_data$Type)]
+
+# Using lab 09
+pr.out = prcomp(leukemia_data[2:ncol(leukemia_data)], scale = T, center = T)
+pr.out$x[,1:2]
+
+plot(x = pr.out$x[,1:2][,1], 
+     y = pr.out$x[,1:2][,2],
+     col = plot_colors)+
+  text(pr.out$x[,1:2], labels = leukemia_data$Type, cex = 0.3)
 
 ```
 
+Along the PC2 axis, it seems like E2A-PBX1 or T-ALL is the most clearly separated.
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+head(sort(abs(pr.out$rotation[,1]), decreasing = T), 6)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The above show the six genes with the highest loading in PC1.
+
