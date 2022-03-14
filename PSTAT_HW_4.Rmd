@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = T, cache = T, message = F)
+knitr::opts_chunk$set(echo = T, cache = T, message = F, warning = F)
 library(tidyverse)
 library(ROCR)
 library(ggridges)
@@ -92,12 +92,14 @@ plot_colors = rainbow_colors[(leukemia_data$Type)]
 
 # Using lab 09
 pr.out = prcomp(leukemia_data[2:ncol(leukemia_data)], scale = T, center = T)
+
 pr.out$x[,1:2]
 
 plot(x = pr.out$x[,1:2][,1], 
      y = pr.out$x[,1:2][,2],
-     col = plot_colors)+
-  text(pr.out$x[,1:2], labels = leukemia_data$Type, cex = 0.3)
+     col = plot_colors,
+     cex = 0.3)+
+  text(pr.out$x[,1:2], labels = leukemia_data$Type, cex = 0.25)
 
 ```
 
@@ -107,7 +109,7 @@ Along the PC2 axis, it seems like E2A-PBX1 or T-ALL is the most clearly separate
 head(sort(abs(pr.out$rotation[,1]), decreasing = T), 6)
 ```
 
-The above show the six genes with the highest loading in PC1.
+The above show the six genes with the highest loadings in PC1.
 
 (d) PCA orders the principal components according to the amount of total variation in the data that they explain. This does not mean, however, that the principal components are sorted in terms of how useful they are at capturing variation between the leukemia groups. For example, if gene expression varied significantly with age and gender (independent of leukemia status), the first principal components could reflect genetic variation due to age and gender, but not to leukemia. (4 pts) See if the 3rd PC is better at discriminating between leukemia types by plotting the data projected onto the first and third principal components (not the second).
 
@@ -118,7 +120,8 @@ plot(x = pr.out$x[, c(1, 3)][,1],
   text(pr.out$x[, c(1,3)], labels = leukemia_data$Type, cex = 0.3)
 ```
 
-There seems to be much better separation (discrimination) between leukemia types as the variance is high but the spread of the means are low.
+There seems to be much better separation (discrimination) between leukemia types as the variance is low but the spread of the means is high.
+
 
 (e) (2 pts) Use the filter command to create a new dataframe (or a tibble if you’d like) leukemia_subset by subsetting to include only rows for which Type is either T-ALL, TEL-AML1, or Hyperdip50. (2 pts) Compute a euclidean distance matrix between the subjects using the dist function and then run hierarchical clustering using complete linkage. (2 pts) Plot two dendrograms based on the hierarchical clustering result. In the first plot, force 3 leukemia types to be the labels of terminal nodes, color the branches and labels to have 3 groups and rotate the dendrogram counter-clockwise to have all the terminal nodes on the right. (2 pts) In the second plot, do all the same things except that this time color all the branches and labels to have 5 groups. Please make sure library dendextend is installed. (See Lab 8)
 
